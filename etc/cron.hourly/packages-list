@@ -1,0 +1,86 @@
+#!/bin/bash
+
+set -e
+
+main(){
+
+    read t < <(tempfilename)
+    read pm < <(detect_packagemanager)
+    read fp < <(path_"$pm")
+
+    list_"$pm" > "$t"
+
+    cp "$t" "$fp"
+    rm "$t"
+
+    etckeeper_commit
+}
+
+tempfilename(){
+    local f
+    while true
+    do
+        f="/tmp/file-$RANDOM-$RANDOM-$RANDOM-$RANDOM"
+	if ! [[ -e "$f" ]]
+	then
+	    echo "$f"
+	    break
+	fi
+    done
+}
+
+etckeeper_commit(){
+    if type -p etckeeper > /dev/null
+    then
+        etckeeper commit -m 'packages list updated'
+    fi
+}
+
+list_dpkg(){
+    dpkg --get-selections	
+}
+
+path_dpkg(){
+    echo "/etc/dpkg/packages.txt"
+}
+
+list_xbps(){
+    xbps-query -l
+}
+
+path_xbps(){
+    echo "/etc/xbps-packages.txt"
+}
+
+list_unknown(){
+    local c
+    {
+        for p in /bin /sbin /usr/bin /usr/sbin
+        do
+	    cd "$p"
+	    ls --time-style=long-iso -lid *
+	done
+    } | sort -n | uniq
+}
+
+path_unknown(){
+    echo "/etc/bins.txt"
+}
+
+detect_packagemanager(){
+    if [[ -e /var/lib/dpkg/status ]]
+    then
+        echo "dpkg"
+        return
+    fi
+
+    if [[ -e /var/db/xbps ]]
+    then
+	echo "xbps"
+        return
+    fi
+
+    echo "unknown"
+}
+
+main
