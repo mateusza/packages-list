@@ -11,7 +11,6 @@ main(){
 
     for pm in "${PACKAGE_MANAGERS[@]}"
     do
-	echo "PM: $pm"
 	check_"$pm" || continue
         read fp < <(path_"$pm")
         list_"$pm" > "$t"
