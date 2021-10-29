@@ -11,6 +11,7 @@ main(){
 
     for pm in "${PACKAGE_MANAGERS[@]}"
     do
+	echo "PM: $pm"
 	check_"$pm" || continue
         read fp < <(path_"$pm")
         list_"$pm" > "$t"
@@ -38,7 +39,7 @@ etckeeper_commit(){
     msg="$1"
     if type -p etckeeper > /dev/null
     then
-        etckeeper commit -m "$msg"
+        etckeeper commit -m "$msg" || true
     fi
 }
 
