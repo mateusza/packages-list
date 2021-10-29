@@ -1,19 +1,23 @@
 #!/bin/bash
 
+PACKAGE_MANAGERS=(dpkg xbps unknown)
+
 set -e
 
 main(){
+    etckeeper_commit "pre packages list"
 
     read t < <(tempfilename)
-    read pm < <(detect_packagemanager)
-    read fp < <(path_"$pm")
 
-    list_"$pm" > "$t"
-
-    cp "$t" "$fp"
+    for pm in "${PACKAGE_MANAGERS[@]}"
+    do
+	check_"$pm" || continue
+        read fp < <(path_"$pm")
+        list_"$pm" > "$t"
+        cp "$t" "$fp"
+        etckeeper_commit "$pm - packages list updated"
+    done
     rm "$t"
-
-    etckeeper_commit
 }
 
 tempfilename(){
@@ -30,10 +34,16 @@ tempfilename(){
 }
 
 etckeeper_commit(){
+    local msg
+    msg="$1"
     if type -p etckeeper > /dev/null
     then
-        etckeeper commit -m 'packages list updated'
+        etckeeper commit -m "$msg"
     fi
+}
+
+check_dpkg(){
+    [[ -e /var/lib/dpkg/status ]]
 }
 
 list_dpkg(){
@@ -41,7 +51,12 @@ list_dpkg(){
 }
 
 path_dpkg(){
+    [[ -d '/etc/dpkg' ]] || mkdir '/etc/dpkg'
     echo "/etc/dpkg/packages.txt"
+}
+
+check_xbps(){
+    [[ -e /var/db/xbps ]]
 }
 
 list_xbps(){
@@ -50,6 +65,10 @@ list_xbps(){
 
 path_xbps(){
     echo "/etc/xbps-packages.txt"
+}
+
+check_unknown(){
+    true
 }
 
 list_unknown(){
@@ -67,20 +86,5 @@ path_unknown(){
     echo "/etc/bins.txt"
 }
 
-detect_packagemanager(){
-    if [[ -e /var/lib/dpkg/status ]]
-    then
-        echo "dpkg"
-        return
-    fi
-
-    if [[ -e /var/db/xbps ]]
-    then
-	echo "xbps"
-        return
-    fi
-
-    echo "unknown"
-}
-
 main
+
