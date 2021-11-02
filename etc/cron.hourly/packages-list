@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PACKAGE_MANAGERS=(dpkg xbps unknown)
+PACKAGE_MANAGERS=(dpkg rpm xbps unknown)
 
 set -e
 
@@ -53,6 +53,18 @@ list_dpkg(){
 path_dpkg(){
     [[ -d '/etc/dpkg' ]] || mkdir '/etc/dpkg'
     echo "/etc/dpkg/packages.txt"
+}
+
+check_rpm(){
+    [[ -e /var/lib/rpm/Packages ]]
+}
+
+list_rpm(){
+    rpm -qa | sort
+}
+
+path_rpm(){
+    echo '/etc/rpm/packages.txt'
 }
 
 check_xbps(){
